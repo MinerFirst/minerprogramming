@@ -1,0 +1,28 @@
+/* Define types that could be discovered on the network */
+deftype Greeter;
+
+def makeGreeter(myName) {
+    /* Spawn an actor */
+    actor: {
+        /* Actors have a separate namespace, include the language futures in it */
+        import /.at.lang.futures;
+
+        /* A method that could be called by other greeters */
+        def getName(){myName};
+
+        /* Export this actor on the network */
+        export: self as: Greeter;
+        
+        /* Main logic: if we discover another Greeter ... */
+        whenever: Greeter discovered: {|other|
+            /* Asynchronously get their name, and greet them */
+            when: other<-getName()@FutureMessage becomes: {|name|
+                system.println("Hello " + name + " from " + myName);
+            };
+        };
+    };
+};
+
+/* Spawn 2 actors that will greet each other */
+makeGreeter("Alice");
+makeGreeter("Bob");
